@@ -14,6 +14,7 @@ namespace Tiled2Unity
 
         public string SortingLayerName { get; private set; }
         public int? SortingOrder { get; private set; }
+        public int? HillType { get; private set; }
 
         public TmxObjectTile()
         {
@@ -70,6 +71,10 @@ namespace Tiled2Unity
             if (this.Properties.PropertyMap.ContainsKey("unity:sortingOrder"))
             {
                 this.SortingOrder = this.Properties.GetPropertyValueAsInt("unity:sortingOrder");
+            }
+            if (this.Properties.PropertyMap.ContainsKey("unity:hillType"))
+            {
+                this.HillType = this.Properties.GetPropertyValueAsInt("unity:hillType");
             }
         }
 

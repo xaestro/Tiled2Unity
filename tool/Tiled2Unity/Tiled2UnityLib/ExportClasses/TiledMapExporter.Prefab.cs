@@ -84,6 +84,7 @@ namespace Tiled2Unity
             // We create an element for each tiled layer and add that to the prefab
             {
                 List<XElement> layerElements = new List<XElement>();
+                float depth_z = 0;
                 foreach (var layer in this.tmxMap.Layers)
                 {
                     if (layer.Visible == false)
@@ -93,12 +94,12 @@ namespace Tiled2Unity
 
                     // Is we're using depth shaders for our materials then each layer needs depth assigned to it
                     // The "depth" of the layer is negative because the Unity camera is along the negative z axis
-                    float depth_z = 0;
                     if (Tiled2Unity.Settings.DepthBufferEnabled && layer.SortingOrder != 0)
                     {
                         float mapLogicalHeight = this.tmxMap.MapSizeInPixels().Height;
                         float tileHeight = this.tmxMap.TileHeight;
-                        depth_z = CalculateLayerDepth(layer.SortingOrder, tileHeight, mapLogicalHeight);
+                        //depth_z = CalculateLayerDepth(layer.SortingOrder, tileHeight, mapLogicalHeight);
+
                     }
 
                     XElement layerElement =
@@ -118,11 +119,11 @@ namespace Tiled2Unity
                     // Collision data for the layer
                     if (layer.Ignore != TmxLayer.IgnoreSettings.Collision)
                     {
-                        foreach (var collisionLayer in layer.CollisionLayers)
-                        {
-                            var collisionElements = CreateCollisionElementForLayer(collisionLayer);
+                        //foreach (var collisionLayer in layer.CollisionLayers)
+                        //{
+                            var collisionElements = Create3dCollisionElementForLayer(layer);
                             layerElement.Add(collisionElements);
-                        }
+                        //}
                     }
 
                     AssignUnityProperties(layer, layerElement, PrefabContext.TiledLayer);
@@ -133,6 +134,7 @@ namespace Tiled2Unity
                 }
 
                 prefab.Add(layerElements);
+                depth_z++;
             }
 
             // Add all our object groups (may contain colliders)
@@ -405,6 +407,7 @@ namespace Tiled2Unity
             List<String> knownProperties = new List<string>();
             knownProperties.Add("unity:layer");
             knownProperties.Add("unity:tag");
+            knownProperties.Add("unity:hillType");
             knownProperties.Add("unity:sortingLayerName");
             knownProperties.Add("unity:sortingOrder");
             knownProperties.Add("unity:scale");
@@ -613,6 +616,8 @@ namespace Tiled2Unity
 
                 xmlMeshObject.SetAttributeValue("sortingLayerName", tmxObjectTile.SortingLayerName ?? tmxObjectTile.ParentObjectGroup.SortingLayerName);
                 xmlMeshObject.SetAttributeValue("sortingOrder", tmxObjectTile.SortingOrder ?? tmxObjectTile.ParentObjectGroup.SortingOrder);
+
+                //xmlMeshObject.SetAttributeValue("hillType", tmxObjectTile.HillType ?? 0);
 
                 // Game object that contains mesh moves position to that local origin of Tile Object (from Tiled's point of view) matches the root position of the Tile game object
                 // Put another way: This translation moves away from center to local origin

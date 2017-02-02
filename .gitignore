@@ -41,3 +41,9 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+tool/Tiled2Unity/.vs/
+tool/Tiled2Unity/Tiled2UnityLib/bin/
+tool/Tiled2Unity/Tiled2UnityLib/obj/
+tool/Tiled2Unity/src/bin/
+tool/Tiled2Unity/src/obj/

@@ -91,6 +91,79 @@ namespace Tiled2Unity
             return gameObjectCollision;
         }
 
+        private XElement Create3dCollisionElementForLayer(TmxLayer layer) {
+            LayerClipper.TransformPointFunc xfFunc =
+                delegate (float x, float y) {
+                                // Transform point to Unity space
+                                PointF pointUnity3d = PointFToUnityVector_NoScale(new PointF(x, y));
+                    ClipperLib.IntPoint point = new ClipperLib.IntPoint(pointUnity3d.X, pointUnity3d.Y);
+                    
+                    return point;
+                };
+
+            LayerClipper.ProgressFunc progFunc =
+                delegate (string prog) {
+                    Logger.WriteLine(prog);
+                };
+
+            ClipperLib.PolyTree solution = LayerClipper.ExecuteClipper(this.tmxMap, layer, xfFunc, progFunc);
+
+            // Add our colliders
+            List<XElement> polyColliderElements = new List<XElement>();
+
+            // TODO add all the pieces
+            AddBlocks(layer, polyColliderElements);
+
+            XElement gameObjectCollision =
+                new XElement("GameObject",
+                    new XAttribute("name", "Collision"),
+                    polyColliderElements);
+
+            return gameObjectCollision;
+        }
+
+        private void AddBlocks(TmxLayer layer, List<XElement> xmlList) {
+            string hillTypes = ""; // TODO don't hard code this since we'll have variable sizes
+            int current_count = 0;
+            string lastHillType = "-1";
+
+            //foreach (var tile in layer.TmxMap.Tiles.Values) {
+            //    if (tile.Properties.PropertyMap.Count > 0) {
+            //        Logger.WriteLine("Tile " + tile.GlobalId + ":" + tile.LocalId + " " + tile.Properties.PropertyMap.Count);
+            //    }
+            //}
+            HashSet<uint> idSet = new HashSet<uint>();
+            foreach (uint tileId in layer.TileIds) {
+                string hillType;
+                idSet.Add(tileId);
+                if (tileId == 0) {
+                    hillType = "-1";
+                }
+                else {
+                    var tilePropertyMap = layer.TmxMap.Tiles[tileId].Properties.PropertyMap;
+                    if (tilePropertyMap.Count > 0) {
+                        Logger.WriteLine("Placing Tile " + tileId + " " + tilePropertyMap.Keys.ToString());
+                    }
+                    if (tilePropertyMap.ContainsKey("HillType")) {
+                        hillType = tilePropertyMap["HillType"].Value;
+                    }
+                    else {
+                        hillType = "0";
+                    }
+                }
+                if (!hillType.Equals(lastHillType)) {
+                    hillTypes += lastHillType + "[" + current_count + "] ";
+                    current_count = 1;
+                    lastHillType = hillType;
+                } else {
+                    current_count++;
+                }
+            }
+            Logger.WriteLine(layer.Name + " IDs: " + string.Join(",", idSet));
+            XElement pathElement = new XElement("HillTypes", hillTypes);
+            xmlList.Add(pathElement);
+        }
+
         private void AddPolygonCollider2DElements_Convex(ClipperLib.PolyTree solution, List<XElement> xmlList)
         {
             // This may generate many convex polygons as opposed to one "complicated" one
